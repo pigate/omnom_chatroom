@@ -1,0 +1,6 @@
+{
+"name": "Omnon.js",
+"description": "A bare Node.js chat app with chat rooms using Express 4",
+"repository": "https://github.com/pigate/omnom_chatroom",
+"keywords": ["node", "express", "chat"]
+}
