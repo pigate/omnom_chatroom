@@ -1,26 +1,6 @@
 {
-  "name": "omnom-chatroom",
-  "version": "0.1",
-  "description": "A simple Node.js chatroom app using Express 4",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "body-parser": "^1.4.3",
-    "express": "^4.4.5"
-  },
-  "engines": {
-    "node": "0.12.x"
-  },
-  "author": "mimichiang",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/pigate/omnom_chatroom"
-  },
-  "keywords": [
-    "node",
-    "express"
-  ],
-  "license": "MIT"
+"name": "omnom-chat",
+"version": "0.0.1",
+"description": "chat app",
+"dependencies": {}
 }
