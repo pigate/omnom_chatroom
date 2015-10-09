@@ -6,7 +6,10 @@ app.get('/', function(request, response){
   response.sendFile(__dirname + '/index.html');
 });
 
+var clients = [];
+
 io.on('connection', function(socket){
+  clients.push(socket);
   socket.broadcast.emit('hi');
 
   console.log('connected');
@@ -16,6 +19,13 @@ io.on('connection', function(socket){
   socket.on('chat message', function(msg){
     console.log('a message: ' + msg);
     io.emit('chat message', msg);
+  });
+  socket.on('typing', function(){
+    //socket.broadcast.emit('typing', 'is typing...');
+    for(var i = 0; i < clients.length; i++){
+      if (clients[i] == socket) continue;
+      clients[i].emit('typing', 'is typing...');
+    }
   });
 });
 
