@@ -15,6 +15,9 @@ io.on('connection', function(socket){
   console.log('connected');
   socket.on('disconnect', function(){
     console.log('user disconnected');
+    var i = clients.indexOf(socket);
+    clients.splice(i, 1);
+    broadcast_others('exit', 'someone exited');
   });
   socket.on('chat message', function(msg){
     console.log('a message: ' + msg);
@@ -22,11 +25,14 @@ io.on('connection', function(socket){
   });
   socket.on('typing', function(){
     //socket.broadcast.emit('typing', 'is typing...');
+    broadcast_others('typing', 'is typing...');
+  });
+  var broadcast_others = function(type_event, data){
     for(var i = 0; i < clients.length; i++){
       if (clients[i] == socket) continue;
-      clients[i].emit('typing', 'is typing...');
+      clients[i].emit(type_event, data);
     }
-  });
+  }
 });
 
 http.listen(3000, function(){
