@@ -7,12 +7,21 @@ app.get('/', function(request, response){
 });
 
 var clients = [];
+var rooms = ['default'];
 
 io.on('connection', function(socket){
   clients.push(socket);
   socket.broadcast.emit('hi');
-
-  console.log('connected');
+  var address = socket.handshake.address;
+  console.log(socket.client.request.headers['x-forwarded-for'] || socket.client.conn.remoteAddress)
+  console.log('connected', socket.request.connection.remoteAddress);
+  var broadcast_others = function(type_event, data){
+    for(var i = 0; i < clients.length; i++){
+      if (clients[i] == socket) continue;
+      clients[i].emit(type_event, data);
+    }
+  }
+  broadcast_others('joined', 'someone just joined');
   socket.on('disconnect', function(){
     console.log('user disconnected');
     var i = clients.indexOf(socket);
@@ -27,12 +36,6 @@ io.on('connection', function(socket){
     //socket.broadcast.emit('typing', 'is typing...');
     broadcast_others('typing', 'is typing...');
   });
-  var broadcast_others = function(type_event, data){
-    for(var i = 0; i < clients.length; i++){
-      if (clients[i] == socket) continue;
-      clients[i].emit(type_event, data);
-    }
-  }
 });
 
 http.listen(3000, function(){
