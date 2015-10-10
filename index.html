@@ -14,21 +14,52 @@
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5p 10px; }
       #messages li:nth-child(odd) { background: #eee; }
+      #roster-list { list-style-type: none; margin: 0; padding: 10px 10px; }
+      #roster-list a { cursor: pointer; border-radius: 3px; background: #3cefec;margin: 5px 10px 5px 10px; padding: 5px 5px; }
     </style>
   </head>
   <body>
-    <h1>Omnom ChatRoom</h1>
-    <ul id="messages"></ul>
-    <div id="alert-joined">someone joined.</div>
-    <div id="alert-exit">someone left.</div>
-    <div id="alert-typing">is typing...</div>
-    <form action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
-    </form>
+    <div id="chat-intro">
+      <p>Click to join</p>
+      <ul id="roster-list"></ul>
+    </div>
+    <div id="chat-content">
+      <ul id="messages"></ul>
+      <div id="alert-joined">someone joined.</div>
+      <div id="alert-exit">someone left.</div>
+      <div id="alert-typing">is typing...</div>
+      <form action="">
+        <input id="m" autocomplete="off" /><button>Send</button>
+      </form>
+    </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
       var socket = io();
+      socket.emit('roster-request', 'true');
+      socket.on('roster-request-reply', function(data){
+        var groups = JSON.parse(data);
+        drawRosterList(groups); 
+      });
+      function groupRequestNodeFactory(groupName){
+        var linkNode = document.createElement("a");
+        linkNode.innerHTML = groupName;
+        linkNode.addEventListener("click", function(e){
+          socket.emit("request-join", groupName);
+          e.preventDefault(); 
+        });
+        return linkNode;
+      }
+      function drawRosterList(rosterList){
+        var roster_list = document.getElementById('roster-list');
+        roster_list.innerHTML = '';
+        for(var i = 0; i < rosterList.length; i++){
+          roster_list.appendChild(groupRequestNodeFactory(rosterList[i]));
+        }  
+      }; 
+      function clearMessageList(){
+        $('#messages').html('');
+      };
       $('form').submit(function(){
         socket.emit('chat message', $('#m').val());
         $('#m').val('');
@@ -39,18 +70,32 @@
         $('#messages').append($('<li>').text(msg));
       });
       $('#alert-typing').hide();
+      $('#alert-typing').attr("defaultMsg",  ' is typing');
       $('#alert-exit').hide();
       $('#alert-joined').hide();
-      socket.on('joined', function(){
-        startTimedDisplay($('#alert-joined'));
+      socket.on('joined', function(client_name){
+        startTimedDisplay($('#alert-joined'), client_name + " joined");
       });
-      socket.on('typing', function(){
-	startTimedDisplay($('#alert-typing'));
+      socket.on('typing', function(client_name){
+	startTimedDisplay($('#alert-typing'), client_name + " is typing");
       });
-      socket.on('exit', function(){
-	startTimedDisplay($('#alert-exit'));
+      socket.on('exit', function(client_name){
+	startTimedDisplay($('#alert-exit'), client_name + " exited");
       });
-      function startTimedDisplay(elem){
+      var current_room = 'default';
+      socket.on('request-join-reply', function(data){
+        var res = JSON.parse(data);
+        if (res.success){
+          alert("Success joined " + res.group);
+          if (current_room != res.group)
+            clearMessageList(); 
+        } else {
+          alert("Failed to join " + res.group);
+        }
+      });
+      function startTimedDisplay(elem, msg){
+        if (msg != undefined && msg != null)
+	  elem.text(msg);
 	elem.show();
 	console.log("someone typing");
         setTimeout(function(){
