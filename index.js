@@ -11,8 +11,7 @@ var rooms = { 'default': [], 'chat1': []};
 io.on('connection', function(socket){
   console.log(client_name, 'just joined');
   var address = socket.handshake.address;
-  console.log(socket.client.request.headers['x-forwarded-for'] || socket.client.conn.remoteAddress)
-  console.log('connected', socket.request.connection.remoteAddress);
+  console.log('connected', socket.client.request.headers['x-forwarded-for'] || socket.client.conn.remoteAddress)
 
   var client_name = 'anon' + Math.floor(Math.random()*10000000);
   var current_room = 'default';
@@ -35,14 +34,13 @@ io.on('connection', function(socket){
   });
 
   socket.on('disconnect', function(){
-    console.log('user disconnected');
+    console.log(client_name, 'disconnected');
     var i = rooms[current_room].indexOf(socket);
     rooms[current_room].splice(i, 1);
     broadcast_others_room(current_room, 'exit', client_name);
   });
 
   socket.on('chat message', function(msg){
-    console.log('a message: ' + msg);
     broadcast_others_room(current_room, 'chat message', client_name + ": " + msg);
     socket.emit('chat message', 'you: ' + msg);
   });
