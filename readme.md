@@ -1,1 +1,1 @@
-![alt tag](https://drive.google.com/file/d/0B_h8uIC2m_pTTUowTXNET0pUZ00/view?usp=sharing)
+![alt tag](https://cloud.githubusercontent.com/assets/5489405/10417984/2d6acc32-7003-11e5-9251-6b3166ff7927.png)
