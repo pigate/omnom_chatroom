@@ -15,13 +15,26 @@
       #messages li { padding: 5p 10px; }
       #messages li:nth-child(odd) { background: #eee; }
       #roster-list { list-style-type: none; margin: 0; padding: 10px 10px; }
-      #roster-list a { cursor: pointer; border-radius: 3px; background: #3cefec;margin: 5px 10px 5px 10px; padding: 5px 5px; }
+      #roster-list a { cursor: pointer; border-radius: 3px; background: #ccffff;margin: 5px 10px 5px 10px; padding: 5px 5px; }
+      #roster-list a#active { background: ##FFEB99; font-weight: bold; } 
+      #ind-active { display: none; float: left; }
+      #chat-intro { padding: 10px 10px; }
+      #ind-active-chat { border-radius: 3px; background: #FFEB99; margin: 5px 10px 5px 10px; padding: 5px 5px; font-weight: bold; }
+    
     </style>
   </head>
   <body>
-    <div id="chat-intro">
-      <p>Click to join</p>
-      <ul id="roster-list"></ul>
+   <div id="chat-intro">
+      <div id="ind-active">
+        Active:
+        <div id="ind-active-chat">
+         none
+        </div>
+      </div>
+      <div id="roster-menu">
+        <p>Click to join</p>
+        <ul id="roster-list"></ul>
+      </div>
     </div>
     <div id="chat-content">
       <ul id="messages"></ul>
@@ -35,21 +48,17 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
-      var socket = io();
-      socket.emit('roster-request', 'true');
-      socket.on('roster-request-reply', function(data){
-        var groups = JSON.parse(data);
-        drawRosterList(groups); 
-      });
       function groupRequestNodeFactory(groupName){
         var linkNode = document.createElement("a");
         linkNode.innerHTML = groupName;
+        linkNode.setAttribute("id", "ind-data-" + groupName);
         linkNode.addEventListener("click", function(e){
           socket.emit("request-join", groupName);
           e.preventDefault(); 
         });
         return linkNode;
       }
+
       function drawRosterList(rosterList){
         var roster_list = document.getElementById('roster-list');
         roster_list.innerHTML = '';
@@ -57,42 +66,11 @@
           roster_list.appendChild(groupRequestNodeFactory(rosterList[i]));
         }  
       }; 
+
       function clearMessageList(){
         $('#messages').html('');
       };
-      $('form').submit(function(){
-        socket.emit('chat message', $('#m').val());
-        $('#m').val('');
-        return false;
-      });
-      socket.on('chat message', function(msg){
-        console.log('received', msg);
-        $('#messages').append($('<li>').text(msg));
-      });
-      $('#alert-typing').hide();
-      $('#alert-typing').attr("defaultMsg",  ' is typing');
-      $('#alert-exit').hide();
-      $('#alert-joined').hide();
-      socket.on('joined', function(client_name){
-        startTimedDisplay($('#alert-joined'), client_name + " joined");
-      });
-      socket.on('typing', function(client_name){
-	startTimedDisplay($('#alert-typing'), client_name + " is typing");
-      });
-      socket.on('exit', function(client_name){
-	startTimedDisplay($('#alert-exit'), client_name + " exited");
-      });
-      var current_room = 'default';
-      socket.on('request-join-reply', function(data){
-        var res = JSON.parse(data);
-        if (res.success){
-          alert("Success joined " + res.group);
-          if (current_room != res.group)
-            clearMessageList(); 
-        } else {
-          alert("Failed to join " + res.group);
-        }
-      });
+
       function startTimedDisplay(elem, msg){
         if (msg != undefined && msg != null)
 	  elem.text(msg);
@@ -102,9 +80,65 @@
           elem.hide();
         }, 400);
       }
+      $('#ind-active').hide();
+      $('#alert-typing').hide();
+      $('#alert-typing').attr("defaultMsg",  ' is typing');
+      $('#alert-exit').hide();
+      $('#alert-joined').hide();
+
       document.getElementById('m').onkeydown = function(){ 
 	socket.emit('typing', 'true');
       } 
+
+      $('form').submit(function(){
+        socket.emit('chat message', $('#m').val());
+        $('#m').val('');
+        return false;
+      });
+
+      var current_room = null;
+      var socket = io();
+      socket.emit('roster-request', 'true');
+
+      socket.on('roster-request-reply', function(data){
+        var groups = JSON.parse(data);
+        drawRosterList(groups); 
+      });
+
+      socket.on('joined', function(client_name){
+        startTimedDisplay($('#alert-joined'), client_name + " joined");
+      });
+
+      socket.on('chat message', function(msg){
+        console.log('received', msg);
+        $('#messages').append($('<li>').text(msg));
+      });
+
+      socket.on('typing', function(client_name){
+	startTimedDisplay($('#alert-typing'), client_name + " is typing");
+      });
+
+      socket.on('exit', function(client_name){
+	startTimedDisplay($('#alert-exit'), client_name + " exited");
+      });
+
+      socket.on('request-join-reply', function(data){
+        var res = JSON.parse(data);
+        if (res.success){
+          console.log("Success joined " + res.group);
+          if (current_room != res.group){
+            clearMessageList();
+            $('#ind-active-chat').html(res.group);
+            $('#ind-data-' + current_room).show();
+            $('#ind-data-' + res.group).hide();
+            current_room = res.group;
+            if (!$('#ind-active').is(':visible'))
+	      $('#ind-active').show();
+          } 
+        } else {
+          console.log("Failed to join " + res.group);
+        }
+      });
 
     </script>
   </body>
