@@ -4,26 +4,32 @@
     <title>Omnom Chat</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box;}
-      body { font: 13px Helvetica, Arial; }
+      body { font: 13px Helvetica, Arial; } 
+      #content { position: absolute; height: 100%; width: 100%; }
+      #chat-content { display: none; top: 150px; }
+      #chat-menu { padding: 10px 10px; background: #E6E6E6; position: fixed; height: 70px; z-index: 2; width: 100%; }
+      #chat-record { position: absolute; top: 70px; bottom: 38px; overflow-y: scroll; width: 100%; }   
+      #chat-form { display: none; height: 38px; position: fixed; bottom: 0; width: 100%; }
       #alert-joined { display: none; background: #a9e2f3; padding: 10px 10px 10px 10px; position: fixed; bottom: 117px; width: 100%; height: 30px; color: #84848484; }
       #alert-typing { display: none; background: #a9e2f3; padding: 10px 10px 10px 10px; position: fixed; bottom: 39px; width: 100%; height: 30px; color: #84848484; }
       #alert-exit { display: none; background: #a9e2f3; padding: 10px 10px 10px 10px; position: fixed; bottom: 78px; width: 100%; height: 30px; color: #84848484; }
-      form { background: #efefef; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form { background: #efefef; padding: 3px; height: 35px; }
       form button { min-width: 133px; background: rgb(130, 224, 255); border: none; padding: 10px; color: #fff; }
       form input { border: 0; padding: 10px; width: 80%; width: calc(100% - 133px);  }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }  
       #messages li { padding: 5px 10px; margin: 5px; border-radius: 2px; color: #666666; }
       #messages li:nth-child(odd) { background: #eee; }
       #roster-list { list-style-type: none; margin: 0; padding: 10px 10px 10px 0px; }
       #roster-list a { cursor: pointer; border-radius: 2px; background: #75D1FF; margin: 5px 10px 5px 0px; padding: 5px 5px; color: #fff; }
       #ind-active { display: none; float: left; }
-      #chat-intro { padding: 10px 10px; background: #E6E6E6; }
+
       #ind-active-chat { border-radius: 2px; background: #99CC00; margin: 5px 10px 5px 0px; padding: 5px 5px; color: #fff; }
     
     </style>
   </head>
   <body>
-   <div id="chat-intro">
+  <div id="content">
+    <div id="chat-menu">
       <div id="ind-active">
 	<p style="color:#fff;">Active</p>
         <div id="ind-active-chat">
@@ -35,15 +41,18 @@
         <ul id="roster-list"></ul>
       </div>
     </div>
-    <div id="chat-content">
+    <div id="chat-record">
       <ul id="messages"></ul>
       <div id="alert-joined">someone joined.</div>
       <div id="alert-exit">someone left.</div>
       <div id="alert-typing">is typing...</div>
+    </div>
+    <div id="chat-form">
       <form action="">
         <input id="m" autocomplete="off" /><button>Send</button>
       </form>
     </div>
+  </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
@@ -125,14 +134,20 @@
         var res = JSON.parse(data);
         if (res.success){
           console.log("Success joined " + res.group);
+          $('#ind-data-' + res.group).hide();
+          if (!$('#chat-form').is(':visible'))
+            $('#chat-form').show();
           if (current_room != res.group){
             clearMessageList();
+            $('#ind-active').show();
             $('#ind-active-chat').html(res.group);
             $('#ind-data-' + current_room).show();
-            $('#ind-data-' + res.group).hide();
             current_room = res.group;
             if (!$('#ind-active').is(':visible'))
 	      $('#ind-active').show();
+            if (!$('#chat-content').is(':visible'))
+              $('#chat-content').show();
+            $('#m').html('');
           } 
         } else {
           console.log("Failed to join " + res.group);
